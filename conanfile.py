@@ -6,7 +6,7 @@ import os
 
 class OpenCVConan(ConanFile):
     name = "opencv"
-    version = "4.3.0"
+    version = "4.4.0"
     license = "BSD-3-Clause"
     homepage = "https://github.com/opencv/opencv"
     url = "https://github.com/conan-community/conan-opencv"
@@ -43,31 +43,31 @@ class OpenCVConan(ConanFile):
                "quirc": [True, False]}
     default_options = {"shared": False,
                        "fPIC": True,
-                       "contrib": False,
+                       "contrib": True,
                        "jpeg": True,
                        "jpegturbo": False,
                        "tiff": True,
-                       "webp": True,
+                       "webp": False,
                        "png": True,
                        "jpeg2000": "openjpeg",
-                       "openexr": True,
+                       "openexr": False,
                        "gtk": None,
                        "nonfree": False,
-                       "dc1394": True,
+                       "dc1394": False,
                        "carotene": False,
-                       "cuda": False,
+                       "cuda": True,
                        "protobuf": True,
                        "freetype": True,
-                       "harfbuzz": True,
+                       "harfbuzz": False,
                        "eigen": True,
                        'glog': True,
                        "gflags": True,
                        "gstreamer": False,
-                       "openblas": False,
+                       "openblas": True,
                        "ffmpeg": False,
                        "lapack": False,
                        "parallel": None,
-                       "quirc": True}
+                       "quirc": False}
     exports_sources = ["CMakeLists.txt", "patches/*.patch"]
     exports = "LICENSE"
     generators = "cmake"
@@ -92,11 +92,11 @@ class OpenCVConan(ConanFile):
             del self.options.gflags
 
     def source(self):
-        sha256 = "68bc40cbf47fdb8ee73dfaf0d9c6494cd095cf6294d99de445ab64cf853d278a"
+        sha256 = "bb95acd849e458be7f7024d17968568d1ccd2f0681d47fd60d34ffb4b8c52563"
         tools.get("{}/archive/{}.tar.gz".format(self.homepage, self.version), sha256=sha256)
         os.rename('opencv-%s' % self.version, self._source_subfolder)
 
-        sha256 = "acb8e89c9e7d1174e63e40532125b60d248b00e517255a98a419d415228c6a55"
+        sha256 = "a69772f553b32427e09ffbfd0c8d5e5e47f7dab8b3ffc02851ffd7f912b76840"
         tools.get("https://github.com/opencv/opencv_contrib/archive/{}.tar.gz".format(self.version), sha256=sha256)
         os.rename('opencv_contrib-%s' % self.version, 'contrib')
 
@@ -227,6 +227,7 @@ class OpenCVConan(ConanFile):
         cmake.definitions['OPENCV_OTHER_INSTALL_PATH'] = "res"
         cmake.definitions['OPENCV_LICENSES_INSTALL_PATH'] = "licenses"
         cmake.definitions['BUILD_opencv_apps'] = False
+        cmake.definitions['CONAN_CXX_FLAGS'] += " -D_MWAITXINTRIN_H_INCLUDED"
 
         # Compiler configuration
         if self.settings.compiler == 'Visual Studio':
@@ -402,6 +403,7 @@ class OpenCVConan(ConanFile):
         cmake.definitions['WITH_CUDA'] = self.options.cuda
         # This allows compilation on older GCC/NVCC, otherwise build errors.
         cmake.definitions['CUDA_NVCC_FLAGS'] = '--expt-relaxed-constexpr'
+        cmake.definitions['CUDA_GENERATION'] = 'Auto'
 
         # Parallel Framework
         if self.options.parallel == "tbb":
@@ -465,8 +467,8 @@ class OpenCVConan(ConanFile):
             patch_file=os.path.join("patches", "0002-fix-FindOpenJPEG-doesnt-exist.patch"))
         tools.patch(base_path=self._source_subfolder,
             patch_file=os.path.join("patches", "0003-OpenJPEG-fixed-compilation-and-warnings-with-VS.patch"))
-        tools.patch(base_path=self._source_subfolder,
-            patch_file=os.path.join("patches", "0004-add-protobuf-dependencies.patch"))
+        #tools.patch(base_path=self._source_subfolder,
+        #    patch_file=os.path.join("patches", "0004-add-protobuf-dependencies.patch"))
 
         cmake = self._configure_cmake()
         cmake.build()
